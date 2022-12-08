@@ -1,6 +1,15 @@
 # traefik-config
 
-references:
+
+## quick start
+change the domain name in the docker-compose.yml to you domain
+traefik.http.routers.whoami.rule=Host(`yourdomain.com`)
+
+docker compose up -d
+
+
+
+## references:
 
 Docker:
 
