@@ -1,0 +1,54 @@
+version: "3.8" 
+
+networks: 
+  traefik:
+  default: 
+    name: traefik
+    external: true
+  
+services: 
+  traefik: 
+    image: traefik:v2.9
+    restart: always 
+    ports: 
+      # open ports for http, https, and dashboard of Traefik, 
+      # the last one should not be exposed outside of your local network 
+      # it will be accessible via ssh (see below) 
+      - 80:80 
+      - 443:443 
+      - 8080:8080 
+    volumes: 
+      # traffic needs access to docker.sock to monitor the containers 
+      - /var/run/docker.sock:/var/run/docker.sock:ro 
+     # and here is the volumetric access to the certificates 
+      - /data/letsencrypt:/letsencrypt
+      - ./traefik:/etc/traefik
+    networks: 
+      - traefik 
+ 
+  # for the sake of example let's connect whoami, a simple service that displays 
+  # information about the request in textual form 
+  nginx: 
+    image: nginx 
+    restart: always 
+    labels: 
+      - traefik.enable=true 
+      - traefik.docker.network=traefik 
+      - traefik.http.routers.whoami.rule=Host(`pass2.daizacklab.tk`) 
+      - traefik.http.routers.whoami.entrypoints=https 
+      - traefik.http.routers.whoami.tls.certresolver=simple-resolver 
+      - traefik.http.services.whoami.loadbalancer.server.port=80 
+    networks: 
+      - traefik 
+  fastapi: 
+    image: tiangolo/uvicorn-gunicorn-fastapi 
+    restart: always 
+    labels: 
+      - traefik.enable=true 
+      - traefik.docker.network=traefik 
+      - traefik.http.routers.fastapi.rule=Host(`pass.daizacklab.tk`) 
+      - traefik.http.routers.fastapi.entrypoints=https 
+      - traefik.http.routers.fastapi.tls.certresolver=simple-resolver 
+      - traefik.http.services.fastapi.loadbalancer.server.port=80 
+    networks: 
+      - traefik 

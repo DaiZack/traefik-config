@@ -1,0 +1,14 @@
+http:
+  routers:
+    testserver:
+      entryPoints:
+        - "https"
+      rule: "Host(`pass3.daizacklab.tk`)"
+      tls:
+        certResolver: http
+      service: testserver
+  services:
+    testserver:
+      loadBalancer:
+        servers:
+         - url: "http://10.8.0.101"
